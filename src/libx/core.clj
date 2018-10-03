@@ -32,12 +32,14 @@
          ~@body))))
 
 (defn -rewrite-for [bindings body]
-    (let [[item coll] bindings]
-          `(loop [[~item & xs#] ~coll
-                              ret# []]
-                    (if (seq xs#)
-                               (recur xs# (conj ret# ~body))
-                               (seq (conj ret# ~body))))))
+  (let [[item coll] bindings]
+    `(lazy-seq
+       (loop [[~item & xs#] ~coll
+              ret# []]
+         (let [next# (conj ret# ~body)]
+           (if (seq xs#)
+             (recur xs# next#)
+             (seq next#)))))))
 
 (defmacro for
     "Rewrites simple form `for` into `loop`"
