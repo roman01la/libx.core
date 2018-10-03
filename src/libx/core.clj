@@ -19,6 +19,7 @@
                                                           [k `(goog.object/get ~v ~(str k))])))]
                                     (into [vs v] bs))))
                         (into []))
+
            bindings' (loop [[[b v] & bs] (partition 2 bindings)
                             bs' bindings'
                             ret []]
@@ -26,8 +27,11 @@
                          (and (empty? bs') (seq bs))
                          (recur bs bs' (conj ret b v))
 
-                         (and (empty? bs') (empty? bs))
+                         (and (empty? bs') (empty? bs) b v)
                          (conj ret b v)
+
+                         (and (empty? bs') (empty? bs))
+                         ret
 
                          (and (map? b) (contains? b :goog.object/keys))
                          (recur bs (rest bs') (into [] (concat ret (first bs'))))
