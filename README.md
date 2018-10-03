@@ -19,4 +19,5 @@ Expands into `loop` returning `lazy-seq` for simple form `(for [x coll] ...)`
 - [x] 2+ adjacent `mapv`
 - [x] 2+ adjacent `filter`
 - [x] 2+ adjacent `filterv`
-- [x] adjacent `map` and `filter`
+- [x] adjacent `map` and `filter`, `mapv` and `filterv`
+- [ ] arbitrary mixed `map/v` and `filter/v`
