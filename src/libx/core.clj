@@ -47,18 +47,20 @@
           `(clojure.core/for ~seq-exprs ~body-expr)))
 
 (defn -rewrite-doseq [bindings body]
-    (let [[item coll] bindings]
-          `(loop [[~item & xs#] ~coll]
-                    (do ~@body)
-                    (when (seq xs#)
-                               (recur xs#)))))
+  (let [[item coll] bindings]
+    `(let [coll# ~coll]
+       (when-not (empty? coll#)
+         (loop [[~item & xs#] coll#]
+           ~@body
+           (when (seq xs#)
+             (recur xs#)))))))
 
 (defmacro doseq
     "Rewrites simple form `doseq` into `loop`"
     [seq-exprs & body]
     (if (= 2 (count seq-exprs))
           (-rewrite-doseq seq-exprs body)
-          `(clojure.core/for ~seq-exprs ~@body)))
+          `(clojure.core/doseq ~seq-exprs ~@body)))
 
 (defmacro ->>
   "Combines collections transforms (map, filter, etc.) to eliminate intermediate collections"
