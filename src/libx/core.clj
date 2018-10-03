@@ -2,20 +2,6 @@
   (:refer-clojure :exclude [->> for doseq])
   (:require [libx.threading :refer [fuse-transforms]]))
 
-;; (let [jsobj #js {"a" 1 "b" 2}]
-;;  (destruct-js jsobj [a b]
-;;    (console.log a b))
-(defmacro destruct-js
-  "Destructuring syntax for JavaScript objects"
-  [obj keys & body]
-  (let [bindings
-        (->> keys
-         (map name)
-         (mapcat (fn [k] [(symbol k) `(.. ~obj ~(symbol (str "-" k)))]))
-         (into []))]
-    `(let ~bindings
-      ~@body)))
-
 ;; (if-keys [{:keys [a b]} {:a 1 :b 2}]
 ;;   (println a b)
 ;;   (println "nothing"))
