@@ -31,3 +31,12 @@ When all symbols in destructuring form are evaluated to `true`, evaluates body w
 (when-keys [{:keys [a b]} {:a 1 :b 2}]
   (println a b))
 ```
+
+### `let` with JavaScript object destructuring
+```clojure
+(require '[goog.object :as obj])
+
+(let [{:goog.object/keys [x y]} #js {:x 1 :y 2}
+      {::obj/keys [z]} #js {:z 3}] ;; <- with namespace aliased namespaced keyword
+  ...)
+```
