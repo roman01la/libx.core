@@ -10,9 +10,11 @@ clj -Sdeps '{:deps {github-roman01la/libx {:git/url "https://github.com/roman01l
 
 ### Lightweight `doseq`
 Expands into `loop` for simple form `(doseq [x coll] ...)`
+- [ ] Unroll into a sequence of expressions for constant `coll` values
 
 ### Lightweight `for`
 Expands into `loop` returning `lazy-seq` for simple form `(for [x coll] ...)`
+- [ ] Unroll into a sequence of expressions for constant `coll` values
 
 ### Collection transforms fusion in `->>` macro
 - [x] 2+ adjacent `map`
