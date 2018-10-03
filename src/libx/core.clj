@@ -1,4 +1,5 @@
 (ns libx.core
+  (:refer-clojure :exclude [->> for doseq])
   (:require [libx.threading :refer [fuse-transforms]]))
 
 ;; (let [jsobj #js {"a" 1 "b" 2}]
