@@ -24,7 +24,7 @@ Expands into `loop` returning `lazy-seq` for simple form `(for [x coll] ...)`
 - [x] adjacent `map` and `filter`, `mapv` and `filterv`
 - [ ] arbitrary mixed `map/v` and `filter/v`
 
-### `when-keys`
+### `if-keys` & `when-keys`
 When all symbols in destructuring form are evaluated to `true`, evaluates body with those symbols bound to corresponding values in a map.
   
 ```clojure
