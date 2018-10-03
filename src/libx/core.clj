@@ -16,21 +16,31 @@
     `(let ~bindings
       ~@body)))
 
-;; (when-keys [{:keys [a b]} {:a 1 :b 2}]
-;;   (println a b))
-(defmacro when-keys
-  "When all symbols in destructuring form are evaluated to true,
-  evaluates body with those symbols bound to corresponding values in a map"
-  [bindings & body]
-  (let [forms (:keys (bindings 0))
+;; (if-keys [{:keys [a b]} {:a 1 :b 2}]
+;;   (println a b)
+;;   (println "nothing"))
+(defmacro if-keys
+  ([bindings then]
+   `(if-keys ~bindings ~then nil))
+  ([bindings then else]
+   (let [forms (:keys (bindings 0))
         tst (bindings 1)
         nbinds (->> forms
                     (map (fn [s] `(~(keyword s) ~tst)))
                     (interleave forms)
                     (into []))]
     `(let ~nbinds
-       (when (and ~@forms)
-         ~@body))))
+       (if (and ~@forms)
+         ~then
+         ~else)))))
+
+;; (when-keys [{:keys [a b]} {:a 1 :b 2}]
+;;   (println a b))
+(defmacro when-keys
+  "When all symbols in destructuring form are evaluated to true,
+  evaluates body with those symbols bound to corresponding values in a map"
+  [bindings & body]
+  `(if-keys ~bindings (do ~@body)))
 
 (defn -rewrite-for [bindings body]
   (let [[item coll] bindings]
