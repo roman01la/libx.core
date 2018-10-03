@@ -3,22 +3,23 @@
   (:require [libx.threading :refer [fuse-transforms]]
             [clojure.core :as cc]))
 
+
 (defmacro let
   "Works as clojure.core/let, but additionally can destructure JavaScript objects via :goog.object/keys form"
   [bindings & body]
   (cc/let [bindings' (cc/->> bindings
-                        (partition 2)
-                        (filter #(map? (first %)))
-                        (filter #(-> (first %) (contains? :goog.object/keys)))
-                        (map (fn [[{ks :goog.object/keys} v]]
-                               (cc/let [vs (gensym "value_")
-                                        bs (cc/->> (repeat (count ks) vs)
-                                                (interleave ks)
-                                                (partition 2)
-                                                (mapcat (fn [[k v]]
-                                                          [k `(goog.object/get ~v ~(str k))])))]
-                                    (into [vs v] bs))))
-                        (into []))
+                             (partition 2)
+                             (filter #(map? (first %)))
+                             (filter #(-> (first %) (contains? :goog.object/keys)))
+                             (map (fn [[{ks :goog.object/keys} v]]
+                                    (cc/let [vs (gensym "value_")
+                                             bs (cc/->> (repeat (count ks) vs)
+                                                        (interleave ks)
+                                                        (partition 2)
+                                                        (mapcat (fn [[k v]]
+                                                                  [k `(goog.object/get ~v ~(str k))])))]
+                                      (into [vs v] bs))))
+                             (into []))
 
            bindings' (loop [[[b v] & bs] (partition 2 bindings)
                             bs' bindings'
@@ -38,7 +39,7 @@
 
                          :else (recur bs bs' (conj ret b v))))]
 
-       `(cc/let ~bindings' ~@body)))
+    `(cc/let ~bindings' ~@body)))
 
 ;; (if-keys [{:keys [a b]} {:a 1 :b 2}]
 ;;   (println a b)
@@ -47,16 +48,16 @@
   ([bindings then]
    `(if-keys ~bindings ~then nil))
   ([bindings then else]
-   (let [forms (:keys (bindings 0))
-        tst (bindings 1)
-        nbinds (->> forms
-                    (map (fn [s] `(~(keyword s) ~tst)))
-                    (interleave forms)
-                    (into []))]
-    `(let ~nbinds
-       (if (and ~@forms)
-         ~then
-         ~else)))))
+   (let [forms  (:keys (bindings 0))
+         tst    (bindings 1)
+         nbinds (cc/->> forms
+                        (map (fn [s] `(~(keyword s) ~tst)))
+                        (interleave forms)
+                        (into []))]
+     `(let ~nbinds
+        (if (and ~@forms)
+          ~then
+          ~else)))))
 
 ;; (when-keys [{:keys [a b]} {:a 1 :b 2}]
 ;;   (println a b))
@@ -77,11 +78,11 @@
              (seq next#)))))))
 
 (defmacro for
-    "Rewrites simple form `for` into `loop`"
-    [seq-exprs body-expr]
-    (if (= 2 (count seq-exprs))
-          (-rewrite-for seq-exprs body-expr)
-          `(cc/for ~seq-exprs ~body-expr)))
+  "Rewrites simple form `for` into `loop`"
+  [seq-exprs body-expr]
+  (if (= 2 (count seq-exprs))
+    (-rewrite-for seq-exprs body-expr)
+    `(cc/for ~seq-exprs ~body-expr)))
 
 (defn -rewrite-doseq [bindings body]
   (let [[item coll] bindings]
@@ -93,11 +94,11 @@
              (recur xs#)))))))
 
 (defmacro doseq
-    "Rewrites simple form `doseq` into `loop`"
-    [seq-exprs & body]
-    (if (= 2 (count seq-exprs))
-          (-rewrite-doseq seq-exprs body)
-          `(cc/doseq ~seq-exprs ~@body)))
+  "Rewrites simple form `doseq` into `loop`"
+  [seq-exprs & body]
+  (if (= 2 (count seq-exprs))
+    (-rewrite-doseq seq-exprs body)
+    `(cc/doseq ~seq-exprs ~@body)))
 
 (defmacro ->>
   "Combines collections transforms (map, filter, etc.) to eliminate intermediate collections"
