@@ -1,6 +1,40 @@
 (ns libx.core
-  (:refer-clojure :exclude [->> for doseq])
-  (:require [libx.threading :refer [fuse-transforms]]))
+  (:refer-clojure :exclude [->> for doseq let])
+  (:require [libx.threading :refer [fuse-transforms]]
+            [clojure.core :as cc]))
+
+(defmacro let
+  "Works as clojure.core/let, but additionally can destructure JavaScript objects via :goog.object/keys form"
+  [bindings & body]
+  (cc/let [bindings' (cc/->> bindings
+                        (partition 2)
+                        (filter #(map? (first %)))
+                        (filter #(-> (first %) (contains? :goog.object/keys)))
+                        (map (fn [[{ks :goog.object/keys} v]]
+                               (cc/let [vs (gensym "value_")
+                                        bs (cc/->> (repeat (count ks) vs)
+                                                (interleave ks)
+                                                (partition 2)
+                                                (mapcat (fn [[k v]]
+                                                          [k `(goog.object/get ~v ~(str k))])))]
+                                    (into [vs v] bs))))
+                        (into []))
+           bindings' (loop [[[b v] & bs] (partition 2 bindings)
+                            bs' bindings'
+                            ret []]
+                       (cond
+                         (and (empty? bs') (seq bs))
+                         (recur bs bs' (conj ret b v))
+
+                         (and (empty? bs') (empty? bs))
+                         (conj ret b v)
+
+                         (and (map? b) (contains? b :goog.object/keys))
+                         (recur bs (rest bs') (into [] (concat ret (first bs'))))
+
+                         :else (recur bs bs' (conj ret b v))))]
+
+       `(cc/let ~bindings' ~@body)))
 
 ;; (if-keys [{:keys [a b]} {:a 1 :b 2}]
 ;;   (println a b)
@@ -43,7 +77,7 @@
     [seq-exprs body-expr]
     (if (= 2 (count seq-exprs))
           (-rewrite-for seq-exprs body-expr)
-          `(clojure.core/for ~seq-exprs ~body-expr)))
+          `(cc/for ~seq-exprs ~body-expr)))
 
 (defn -rewrite-doseq [bindings body]
   (let [[item coll] bindings]
@@ -59,9 +93,9 @@
     [seq-exprs & body]
     (if (= 2 (count seq-exprs))
           (-rewrite-doseq seq-exprs body)
-          `(clojure.core/doseq ~seq-exprs ~@body)))
+          `(cc/doseq ~seq-exprs ~@body)))
 
 (defmacro ->>
   "Combines collections transforms (map, filter, etc.) to eliminate intermediate collections"
   [x & forms]
-  `(clojure.core/->> ~x ~@(fuse-transforms forms)))
+  `(cc/->> ~x ~@(fuse-transforms forms)))
